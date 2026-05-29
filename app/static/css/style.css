@@ -1,0 +1,186 @@
+:root {
+  --rs-gold:     #ffd700;
+  --rs-gold-dim: #c8a800;
+  --rs-dark:     #1a0f00;
+  --rs-brown:    #3b1f00;
+  --rs-mid:      #2a1500;
+  --rs-panel:    #231200;
+  --rs-border:   #7a5c00;
+  --rs-text:     #e8d5a0;
+  --rs-muted:    #9b8a5a;
+  --rs-green:    #4caf50;
+  --rs-red:      #ef5350;
+  --rs-blue:     #42a5f5;
+}
+
+/* ── Base ── */
+body {
+  background: var(--rs-dark);
+  color: var(--rs-text);
+  font-family: "Segoe UI", system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Navbar ── */
+.navbar {
+  background: var(--rs-brown) !important;
+  border-bottom: 2px solid var(--rs-gold);
+}
+.navbar-brand {
+  color: var(--rs-gold) !important;
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: 0.4px;
+}
+.navbar-brand span {
+  color: var(--rs-text);
+  font-weight: 400;
+}
+.nav-link {
+  color: var(--rs-text) !important;
+  transition: color 0.15s;
+}
+.nav-link:hover,
+.nav-link.active {
+  color: var(--rs-gold) !important;
+}
+
+/* ── Cards / panels ── */
+.rs-card {
+  background: var(--rs-panel);
+  border: 1px solid var(--rs-border);
+  border-radius: 6px;
+}
+.rs-card-header {
+  background: var(--rs-brown);
+  border-bottom: 1px solid var(--rs-border);
+  color: var(--rs-gold);
+  font-weight: 600;
+  padding: 0.55rem 1rem;
+  border-radius: 6px 6px 0 0;
+}
+.rs-card-body {
+  padding: 1rem;
+}
+
+/* ── Tables ── */
+.rs-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.rs-table th {
+  background: var(--rs-brown);
+  color: var(--rs-gold);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid var(--rs-border);
+  white-space: nowrap;
+}
+.rs-table td {
+  padding: 0.45rem 0.75rem;
+  border-bottom: 1px solid rgba(122, 92, 0, 0.25);
+  color: var(--rs-text);
+  vertical-align: middle;
+}
+.rs-table tr:last-child td {
+  border-bottom: none;
+}
+.rs-table tr:hover td {
+  background: rgba(255, 215, 0, 0.04);
+}
+
+/* ── Rank badges ── */
+.rank-1 { color: #ffd700; font-weight: 700; }
+.rank-2 { color: #c0c0c0; font-weight: 700; }
+.rank-3 { color: #cd7f32; font-weight: 700; }
+
+/* ── Buttons ── */
+.btn-rs {
+  background: var(--rs-brown);
+  border: 1px solid var(--rs-gold);
+  color: var(--rs-gold);
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+.btn-rs:hover {
+  background: var(--rs-gold);
+  color: var(--rs-dark);
+  border-color: var(--rs-gold);
+}
+.btn-rs-sm {
+  font-size: 0.8rem;
+  padding: 0.2rem 0.6rem;
+}
+.btn-rs-danger {
+  border-color: var(--rs-red);
+  color: var(--rs-red);
+}
+.btn-rs-danger:hover {
+  background: var(--rs-red);
+  color: #fff;
+  border-color: var(--rs-red);
+}
+
+/* ── Flash alerts ── */
+.alert-rs-success {
+  background: rgba(76, 175, 80, 0.12);
+  border-color: var(--rs-green);
+  color: #a5d6a7;
+}
+.alert-rs-error {
+  background: rgba(239, 83, 80, 0.12);
+  border-color: var(--rs-red);
+  color: #ef9a9a;
+}
+
+/* ── Text utilities ── */
+.text-gold      { color: var(--rs-gold); }
+.text-gold-dim  { color: var(--rs-gold-dim); }
+.text-rs-muted  { color: var(--rs-muted); }
+.text-rs-green  { color: var(--rs-green); }
+.text-rs-red    { color: var(--rs-red); }
+
+/* ── Player tag pill ── */
+.player-tag {
+  display: inline-block;
+  background: var(--rs-brown);
+  border: 1px solid var(--rs-border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+/* ── Divider ── */
+.rs-divider {
+  border-top: 1px solid var(--rs-border);
+  margin: 1rem 0;
+}
+
+/* ── Category win/loss/tie indicators ── */
+.cat-win  { color: var(--rs-green); font-weight: 600; }
+.cat-loss { color: var(--rs-red); }
+.cat-tie  { color: var(--rs-muted); }
+
+/* ── Bootstrap overrides ── */
+.btn-close {
+  filter: invert(0.8) sepia(1) saturate(3) hue-rotate(5deg);
+}
+
+/* ── Footer ── */
+footer {
+  border-top: 1px solid var(--rs-border);
+  color: var(--rs-muted);
+  font-size: 0.78rem;
+  padding: 1rem 0;
+  margin-top: 3rem;
+}
+footer a {
+  color: var(--rs-muted);
+  text-decoration: none;
+}
+footer a:hover {
+  color: var(--rs-gold);
+}

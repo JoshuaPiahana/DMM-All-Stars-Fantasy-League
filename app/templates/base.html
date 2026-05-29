@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{% block title %}DMM All Stars 3 — Fantasy League{% endblock %}</title>
+  <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/css/bootstrap.min.css"
+        crossorigin="anonymous" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+  {% block head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark mb-4">
+  <div class="container">
+    <a class="navbar-brand" href="{{ url_for('public.index') }}">
+      DMM All Stars 3 <span>Fantasy League</span>
+    </a>
+    <button class="navbar-toggler" type="button"
+            data-bs-toggle="collapse" data-bs-target="#navmenu"
+            aria-controls="navmenu" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navmenu">
+      <ul class="navbar-nav ms-auto gap-1">
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('public.index') }}">Dashboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Matchups</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Leaderboard</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Players</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">Draft</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<div class="container pb-4">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="alert alert-rs-{{ category }} alert-dismissible fade show mb-3" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"
+                aria-label="Close"></button>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</div>
+
+<footer class="text-center">
+  <div class="container">
+    DMM All Stars 3 Fantasy League &nbsp;&middot;&nbsp;
+    Event: 6–15 June 2026 &nbsp;&middot;&nbsp;
+    Data from
+    <a href="https://secure.runescape.com/m=hiscore_oldschool_tournament/"
+       target="_blank" rel="noopener">OSRS Tournament Hiscores</a>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"
+        crossorigin="anonymous" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
