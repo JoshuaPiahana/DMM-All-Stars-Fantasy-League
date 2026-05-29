@@ -48,3 +48,12 @@ Thumbs.db
 .aws/
 *.pem
 samconfig.toml
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.backup
+*.tfstate.lock.info
+infra/terraform.tfvars
+infra/.lambda_placeholder.zip
+# .terraform.lock.hcl is intentionally NOT ignored — commit it to pin provider versions

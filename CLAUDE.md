@@ -27,15 +27,67 @@ Domain: something like `dmmfantasy.gg` — to be purchased before launch.
 
 ### Why these choices
 - App Runner stays always-on → no cold-start problems for SSE connections
-- Lambda for polling removes APScheduler from the web process; poller is independently
-  deployable, testable, and monitorable. Web app becomes read-mostly.
+- Lambda (not in VPC) polls OSRS hiscores API directly, then POSTs to App Runner's
+  `/internal/poll` endpoint (secured by `INGEST_SECRET`). App Runner writes to RDS.
+  This avoids needing a NAT gateway (~$32/month) for Lambda → internet access.
 - RDS free tier eliminates DB cost for first 12 months
 - No auth infrastructure — league code + manager tokens replace accounts entirely
 
+### IaC: Terraform
+All AWS resources are defined in `infra/`. Terraform is the single source of truth for
+infrastructure. Never create resources manually in the AWS console.
+
 ### CI/CD: GitHub Actions
 - **ci.yml**: runs on every push and PR — `ruff check`, `pytest --cov`; fails fast
-- **deploy.yml**: runs on merge to `main` — build Docker image, push to ECR,
-  App Runner auto-deploys; deploy Lambda zip separately via SAM or AWS CLI
+- **deploy.yml**: runs on merge to `main` — build Docker image, push to ECR → App Runner auto-deploys
+- **infra.yml**: runs when `infra/**` changes — `terraform plan` on PRs, `terraform apply` on merge to `main`
+
+---
+
+## Terraform Bootstrap (one-time, manual)
+
+These steps are run once to set up the remote state backend. After this, everything
+else is automated via `infra.yml`.
+
+**Prerequisites:** AWS CLI configured with an IAM user that has AdministratorAccess.
+
+```bash
+# 1. Create S3 bucket for Terraform state
+aws s3 mb s3://dmm-fantasy-tf-state --region us-east-1
+aws s3api put-bucket-versioning \
+  --bucket dmm-fantasy-tf-state \
+  --versioning-configuration Status=Enabled
+
+# 2. Create DynamoDB table for state locking
+aws dynamodb create-table \
+  --table-name dmm-fantasy-tf-locks \
+  --attribute-definitions AttributeName=LockID,AttributeType=S \
+  --key-schema AttributeName=LockID,KeyType=HASH \
+  --billing-mode PAY_PER_REQUEST \
+  --region us-east-1
+
+# 3. Uncomment the backend "s3" block in infra/main.tf, then:
+cd infra
+terraform init   # generates .terraform.lock.hcl — commit this file
+```
+
+**First infrastructure deploy (two-step due to ECR chicken/egg):**
+
+```bash
+# Step 1: Create ECR repo first so we can push an image
+terraform apply -target=aws_ecr_repository.app
+
+# Step 2: Build and push the Docker image
+aws ecr get-login-password --region us-east-1 | \
+  docker login --username AWS --password-stdin <ecr_url>
+docker build -t <ecr_url>:latest .
+docker push <ecr_url>:latest
+
+# Step 3: Apply the rest (App Runner needs the image to exist)
+terraform apply
+```
+
+After this, all subsequent deploys are automated: push to `main` → CI builds + pushes image → App Runner auto-deploys.
 
 ---
 
