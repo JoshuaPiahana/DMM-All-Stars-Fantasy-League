@@ -8,3 +8,6 @@ select = ["E", "F", "I", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--tb=short"
+markers = [
+    "live: hits real OSRS hiscores API — requires internet (run with: pytest -m live)",
+]
