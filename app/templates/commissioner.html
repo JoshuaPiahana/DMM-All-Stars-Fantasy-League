@@ -2,20 +2,211 @@
 {% block title %}Commissioner Panel — DMM All Stars 3 Fantasy{% endblock %}
 
 {% block content %}
-<h1 class="text-gold mb-4">Commissioner Panel</h1>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="text-gold mb-0">Commissioner Panel</h1>
+  <a href="/" class="text-rs-muted small">← Dashboard</a>
+</div>
 
-<div class="row">
-  <div class="col-md-8">
-    <div class="rs-card mb-3">
-      <div class="rs-card-header">League Management</div>
-      <div class="rs-card-body">
-        <p class="text-rs-muted">
-          Full commissioner tools (death entry, prefix config, token reset) coming in Phase 7.
-        </p>
-        <a href="/draft" class="btn btn-rs me-2">Draft Room</a>
-        <a href="/" class="btn btn-rs">Dashboard</a>
+<div id="auth-error" class="alert alert-rs-error mb-3" style="display:none">
+  No commissioner token found. Please <a href="/create" class="text-rs-muted">create a league</a>
+  or retrieve your token.
+</div>
+
+<div class="row g-4">
+
+  {# ── Deaths ── #}
+  <div class="col-12">
+    <div class="rs-card">
+      <div class="rs-card-header d-flex justify-content-between align-items-center">
+        Death Counts
+        <span class="text-rs-muted small">Cumulative — updated manually</span>
+      </div>
+      <div class="rs-card-body p-0">
+        <table class="rs-table">
+          <thead>
+            <tr><th>Player</th><th class="text-end" style="width:8rem">Deaths</th><th style="width:7rem"></th></tr>
+          </thead>
+          <tbody>
+            {% for player in players %}
+            <tr>
+              <td><a href="/player/{{ player.id }}" class="text-gold text-decoration-none">{{ player.display_name }}</a></td>
+              <td class="text-end">
+                <input type="number" class="form-control form-control-sm death-input text-end"
+                       id="death-{{ player.id }}"
+                       value="{{ death_counts.get(player.id, 0) }}"
+                       min="0" style="background:var(--rs-mid);border-color:var(--rs-border);color:var(--rs-text);width:6rem;display:inline-block">
+              </td>
+              <td class="text-center">
+                <button class="btn btn-rs btn-rs-sm"
+                        onclick="saveDeath({{ player.id }})">Save</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </div>
+
+  {# ── Team Prefixes ── #}
+  <div class="col-md-6">
+    <div class="rs-card">
+      <div class="rs-card-header d-flex justify-content-between align-items-center">
+        Team Prefixes
+        <span class="text-rs-muted small">Used to build OSRS account names</span>
+      </div>
+      <div class="rs-card-body p-0">
+        <table class="rs-table">
+          <thead>
+            <tr><th>Team</th><th>Prefix</th><th style="width:7rem"></th></tr>
+          </thead>
+          <tbody>
+            {% for team in teams %}
+            <tr>
+              <td class="text-rs-muted">{{ team.name }}</td>
+              <td>
+                <input type="text" class="form-control form-control-sm"
+                       id="prefix-{{ team.id }}"
+                       value="{{ team.prefix }}" maxlength="20"
+                       placeholder="e.g. BB"
+                       style="background:var(--rs-mid);border-color:var(--rs-border);color:var(--rs-text)">
+              </td>
+              <td class="text-center">
+                <button class="btn btn-rs btn-rs-sm"
+                        onclick="savePrefix({{ team.id }})">Save</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {# ── Manager Tokens ── #}
+  <div class="col-md-6">
+    <div class="rs-card">
+      <div class="rs-card-header">Manager Tokens</div>
+      <div class="rs-card-body p-0">
+        {% if managers %}
+        <table class="rs-table">
+          <thead>
+            <tr><th>Manager</th><th>Token</th><th style="width:7rem"></th></tr>
+          </thead>
+          <tbody>
+            {% for mgr in managers %}
+            <tr>
+              <td>{{ mgr.name }}</td>
+              <td class="text-rs-muted" style="font-family:monospace;font-size:.75rem" id="token-{{ mgr.id }}">
+                {{ mgr.token[:8] }}…
+              </td>
+              <td class="text-center">
+                <button class="btn btn-rs btn-rs-sm btn-rs-danger"
+                        onclick="resetToken({{ mgr.id }}, '{{ mgr.name }}')">Reset</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <div class="rs-card-body text-center py-3">
+          <p class="text-rs-muted mb-0">No league created yet.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    {# ── Manual Refresh ── #}
+    <div class="rs-card mt-3">
+      <div class="rs-card-header">Manual Hiscore Refresh</div>
+      <div class="rs-card-body">
+        <p class="text-rs-muted small mb-3">
+          Fetches current hiscores for all players with a known account name.
+          Only works once account name prefixes are set.
+        </p>
+        <button class="btn btn-rs" id="refresh-btn" onclick="manualRefresh()">Refresh Now</button>
+        <span id="refresh-result" class="text-rs-muted small ms-3" style="display:none"></span>
+      </div>
+    </div>
+  </div>
+
 </div>
+
+<div id="toast" class="position-fixed bottom-0 end-0 m-3" style="display:none;z-index:9999">
+  <div class="rs-panel px-3 py-2 small" id="toast-msg"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const commToken = localStorage.getItem('commissioner_token');
+if (!commToken) {
+  document.getElementById('auth-error').style.display = 'block';
+}
+
+function toast(msg, ok = true) {
+  const el = document.getElementById('toast');
+  const msg_el = document.getElementById('toast-msg');
+  msg_el.textContent = msg;
+  msg_el.style.color = ok ? 'var(--rs-green)' : 'var(--rs-red)';
+  el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 2500);
+}
+
+async function saveDeath(playerId) {
+  const count = parseInt(document.getElementById(`death-${playerId}`).value, 10);
+  if (isNaN(count) || count < 0) { toast('Invalid count', false); return; }
+  const resp = await fetch('/commissioner/deaths', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-Commissioner-Token': commToken},
+    body: JSON.stringify({player_id: playerId, count}),
+  });
+  const data = await resp.json();
+  toast(resp.ok ? `Saved ${count} death(s)` : (data.error || 'Error'), resp.ok);
+}
+
+async function savePrefix(teamId) {
+  const prefix = document.getElementById(`prefix-${teamId}`).value.trim();
+  const resp = await fetch('/commissioner/prefix', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-Commissioner-Token': commToken},
+    body: JSON.stringify({team_id: teamId, prefix}),
+  });
+  const data = await resp.json();
+  toast(resp.ok ? `Prefix set to "${prefix}"` : (data.error || 'Error'), resp.ok);
+}
+
+async function resetToken(managerId, managerName) {
+  if (!confirm(`Reset token for ${managerName}? Their current token will stop working.`)) return;
+  const resp = await fetch(`/commissioner/token/${managerId}`, {
+    method: 'POST',
+    headers: {'X-Commissioner-Token': commToken},
+  });
+  const data = await resp.json();
+  if (resp.ok) {
+    document.getElementById(`token-${managerId}`).textContent = data.token.slice(0, 8) + '…';
+    toast(`New token for ${managerName} generated`);
+  } else {
+    toast(data.error || 'Error', false);
+  }
+}
+
+async function manualRefresh() {
+  const btn = document.getElementById('refresh-btn');
+  const result = document.getElementById('refresh-result');
+  btn.disabled = true;
+  result.style.display = 'none';
+  const resp = await fetch('/commissioner/refresh', {
+    method: 'POST',
+    headers: {'X-Commissioner-Token': commToken},
+  });
+  const data = await resp.json();
+  btn.disabled = false;
+  result.textContent = resp.ok
+    ? `Fetched ${data.fetched} of ${data.total} players`
+    : (data.error || 'Error');
+  result.style.display = 'inline';
+  result.style.color = resp.ok ? 'var(--rs-green)' : 'var(--rs-red)';
+}
+</script>
 {% endblock %}

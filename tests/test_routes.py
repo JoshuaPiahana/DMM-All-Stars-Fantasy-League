@@ -361,3 +361,114 @@ def test_roster_valid_token(seeded_app, league_data):
 def test_roster_invalid_token_404(seeded_app):
     resp = seeded_app.test_client().get("/roster/not-a-real-token")
     assert resp.status_code == 404
+
+
+# ── Phase 7 commissioner panel endpoints ─────────────────────────────────────
+
+def test_commissioner_page_returns_200(seeded_app):
+    resp = seeded_app.test_client().get("/commissioner")
+    assert resp.status_code == 200
+
+
+def test_deaths_requires_auth(seeded_app):
+    player_id = db.session.query(Player).first().id
+    resp = seeded_app.test_client().post(
+        "/commissioner/deaths", json={"player_id": player_id, "count": 3},
+    )
+    assert resp.status_code == 401
+
+
+def test_deaths_wrong_token(seeded_app, league_data):
+    player_id = db.session.query(Player).first().id
+    resp = seeded_app.test_client().post(
+        "/commissioner/deaths",
+        json={"player_id": player_id, "count": 3},
+        headers={"X-Commissioner-Token": "wrong"},
+    )
+    assert resp.status_code == 401
+
+
+def test_deaths_records_entry(seeded_app, league_data):
+    from app.models import Death
+    player_id = db.session.query(Player).first().id
+    resp = seeded_app.test_client().post(
+        "/commissioner/deaths",
+        json={"player_id": player_id, "count": 5},
+        headers={"X-Commissioner-Token": league_data["commissioner_token"]},
+    )
+    assert resp.status_code == 200
+    db.session.expire_all()
+    death = db.session.query(Death).filter_by(player_id=player_id).first()
+    assert death is not None
+    assert death.cumulative_count == 5
+
+
+def test_deaths_updates_existing(seeded_app, league_data):
+    from app.models import Death
+    player_id = db.session.query(Player).first().id
+    client = seeded_app.test_client()
+    headers = {"X-Commissioner-Token": league_data["commissioner_token"]}
+    client.post("/commissioner/deaths", json={"player_id": player_id, "count": 2}, headers=headers)
+    client.post("/commissioner/deaths", json={"player_id": player_id, "count": 7}, headers=headers)
+    db.session.expire_all()
+    deaths = (
+        db.session.query(Death).filter_by(player_id=player_id).order_by(Death.recorded_at).all()
+    )
+    assert len(deaths) == 2
+    assert deaths[-1].cumulative_count == 7
+
+
+def test_prefix_requires_auth(seeded_app):
+    from app.models import RealTeam
+    team_id = db.session.query(RealTeam).first().id
+    resp = seeded_app.test_client().post(
+        "/commissioner/prefix", json={"team_id": team_id, "prefix": "BB"},
+    )
+    assert resp.status_code == 401
+
+
+def test_prefix_updates_team(seeded_app, league_data):
+    from app.models import RealTeam
+    team = db.session.query(RealTeam).first()
+    resp = seeded_app.test_client().post(
+        "/commissioner/prefix",
+        json={"team_id": team.id, "prefix": "BB"},
+        headers={"X-Commissioner-Token": league_data["commissioner_token"]},
+    )
+    assert resp.status_code == 200
+    db.session.expire_all()
+    updated = db.session.get(RealTeam, team.id)
+    assert updated.prefix == "BB"
+
+
+def test_token_reset_requires_auth(seeded_app, league_data):
+    mgr_id = league_data["managers"][0]["id"]
+    resp = seeded_app.test_client().post(f"/commissioner/token/{mgr_id}")
+    assert resp.status_code == 401
+
+
+def test_token_reset_generates_new_token(seeded_app, league_data):
+    mgr = league_data["managers"][0]
+    resp = seeded_app.test_client().post(
+        f"/commissioner/token/{mgr['id']}",
+        headers={"X-Commissioner-Token": league_data["commissioner_token"]},
+    )
+    assert resp.status_code == 200
+    new_token = resp.get_json()["token"]
+    assert new_token != mgr["token"]
+    assert len(new_token) == 36
+
+
+def test_refresh_requires_auth(seeded_app, league_data):
+    resp = seeded_app.test_client().post("/commissioner/refresh")
+    assert resp.status_code == 401
+
+
+def test_refresh_returns_fetched_count(seeded_app, league_data):
+    # Seeded players have no account names → scraper skips all, fetched=0
+    resp = seeded_app.test_client().post(
+        "/commissioner/refresh",
+        headers={"X-Commissioner-Token": league_data["commissioner_token"]},
+    )
+    assert resp.status_code == 200
+    assert "fetched" in resp.get_json()
