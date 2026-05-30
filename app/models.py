@@ -33,7 +33,9 @@ class Player(db.Model):
         back_populates="player", order_by="HiscoreSnapshot.snapped_at"
     )
     roster_entry: Mapped[RosterEntry | None] = relationship(back_populates="player", uselist=False)
-    deaths: Mapped[list[Death]] = relationship(back_populates="player", order_by="Death.recorded_at")
+    deaths: Mapped[list[Death]] = relationship(
+        back_populates="player", order_by="Death.recorded_at"
+    )
 
     @property
     def account_name(self) -> str | None:

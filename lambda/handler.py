@@ -21,8 +21,6 @@ import urllib.parse
 import urllib.request
 
 import boto3
-import requests
-
 from scraper import TOURNAMENT_URL, fetch_player
 
 log = logging.getLogger()

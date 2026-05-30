@@ -10,7 +10,6 @@ from app.services.scoring import (
     sum_roster,
 )
 
-
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def _stats(**overrides) -> dict:
@@ -270,8 +269,10 @@ def test_matchup_no_winner_when_neither_reaches_4():
     # a wins combat, pvp, bosses (3); b wins gathering, processing, raids (3); deaths is ???
     # wait - deaths: a=3, b=2 → b wins deaths  → a: 3 wins, b: 4 wins → b wins matchup
     # Let me construct a true 3-3-1 tie
-    a = _scores(combat_xp=100, pvp_kills=5, bosses=50, raids=0, gathering_xp=0, processing_xp=0, deaths=2)
-    b = _scores(combat_xp=0, pvp_kills=0, bosses=0, raids=3, gathering_xp=100, processing_xp=50, deaths=2)
+    a = _scores(combat_xp=100, pvp_kills=5, bosses=50, raids=0,
+                gathering_xp=0, processing_xp=0, deaths=2)
+    b = _scores(combat_xp=0, pvp_kills=0, bosses=0, raids=3,
+                gathering_xp=100, processing_xp=50, deaths=2)
     result = resolve_matchup(a, b)
     # a wins: combat, pvp, bosses (3 wins)
     # b wins: raids, gathering, processing (3 wins)
@@ -285,9 +286,7 @@ def test_matchup_winner_needs_exactly_4():
     a = _scores(combat_xp=100, pvp_kills=5, bosses=50, raids=1)
     b = _scores(gathering_xp=200, processing_xp=300, deaths=5)
     result = resolve_matchup(a, b)
-    # a wins: combat, pvp, bosses, raids (4); b wins: gathering, processing; deaths: a has 0 deaths (wins deaths too)
-    # Actually deaths: a=0, b=5 → a wins deaths → a: 5 wins, b: 2 wins
-    # Let me just assert winner is "a" since a has 4+ categories
+    # a wins 5 categories (combat, pvp, bosses, raids, deaths); b wins 2
     assert result["matchup_winner"] == "a"
     assert result["wins_a"] >= 4
 

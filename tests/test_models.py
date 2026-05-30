@@ -1,13 +1,19 @@
 """Tests for SQLAlchemy models and seed data. Written before model implementation (TDD)."""
 
-from datetime import datetime, timezone
-
-import pytest
+from datetime import UTC, datetime
 
 from app.extensions import db
-from app.models import Death, DraftState, HiscoreSnapshot, League, Manager, Player, RealTeam, RosterEntry
+from app.models import (
+    Death,
+    DraftState,
+    HiscoreSnapshot,
+    League,
+    Manager,
+    Player,
+    RealTeam,
+    RosterEntry,
+)
 from app.seed import seed_if_empty
-
 
 # ── RealTeam ──────────────────────────────────────────────────────────────────
 
@@ -93,7 +99,7 @@ def test_league_fields(app):
         league = League(
             code="DMMX7K2F",
             commissioner_token="aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",
-            created_at=datetime(2026, 5, 31, tzinfo=timezone.utc),
+            created_at=datetime(2026, 5, 31, tzinfo=UTC),
         )
         db.session.add(league)
         db.session.flush()
@@ -108,7 +114,7 @@ def test_manager_links_to_league(app):
         league = League(
             code="TESTLG01",
             commissioner_token="ffffffff-0000-1111-2222-333333333333",
-            created_at=datetime(2026, 5, 31, tzinfo=timezone.utc),
+            created_at=datetime(2026, 5, 31, tzinfo=UTC),
         )
         db.session.add(league)
         db.session.flush()
@@ -130,7 +136,7 @@ def test_roster_entry_links_manager_and_player(app):
         league = League(
             code="ROST0001",
             commissioner_token="aaaa0000-bbbb-cccc-dddd-eeeeeeeeeeee",
-            created_at=datetime(2026, 5, 31, tzinfo=timezone.utc),
+            created_at=datetime(2026, 5, 31, tzinfo=UTC),
         )
         db.session.add(league)
         mgr = Manager(league=league, name="Bob", token="bbbb0000-1111-2222-3333-444444444444")
@@ -143,7 +149,7 @@ def test_roster_entry_links_manager_and_player(app):
             manager=mgr,
             player=player,
             pick_number=1,
-            drafted_at=datetime(2026, 5, 31, 20, 0, tzinfo=timezone.utc),
+            drafted_at=datetime(2026, 5, 31, 20, 0, tzinfo=UTC),
         )
         db.session.add(entry)
         db.session.flush()
@@ -158,7 +164,7 @@ def test_draft_state_initial_pick_zero(app):
         league = League(
             code="DRFT0001",
             commissioner_token="cccc0000-dddd-eeee-ffff-000000000000",
-            created_at=datetime(2026, 5, 31, tzinfo=timezone.utc),
+            created_at=datetime(2026, 5, 31, tzinfo=UTC),
         )
         db.session.add(league)
         db.session.flush()
@@ -180,7 +186,7 @@ def test_hiscore_snapshot_defaults_to_zero(app):
         snap = HiscoreSnapshot(
             player_id=player.id,
             snapshot_type="poll",
-            snapped_at=datetime(2026, 6, 6, 12, 0, tzinfo=timezone.utc),
+            snapped_at=datetime(2026, 6, 6, 12, 0, tzinfo=UTC),
         )
         db.session.add(snap)
         db.session.flush()
@@ -199,7 +205,7 @@ def test_hiscore_snapshot_stores_values(app):
         snap = HiscoreSnapshot(
             player_id=player.id,
             snapshot_type="baseline",
-            snapped_at=datetime(2026, 6, 6, 11, 0, tzinfo=timezone.utc),
+            snapped_at=datetime(2026, 6, 6, 11, 0, tzinfo=UTC),
             attack_xp=500_000,
             strength_xp=800_000,
             pvp_kills=12,
@@ -223,7 +229,7 @@ def test_death_entry(app):
         death = Death(
             player_id=player.id,
             cumulative_count=3,
-            recorded_at=datetime(2026, 6, 7, 14, 0, tzinfo=timezone.utc),
+            recorded_at=datetime(2026, 6, 7, 14, 0, tzinfo=UTC),
         )
         db.session.add(death)
         db.session.flush()

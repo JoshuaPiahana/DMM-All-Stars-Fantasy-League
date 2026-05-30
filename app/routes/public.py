@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, jsonify, render_template
 
 bp = Blueprint("public", __name__)
 
