@@ -19,8 +19,15 @@ def create_app(config_name: str | None = None) -> Flask:
 
     migrate.init_app(app, db)
 
+    from .routes.api import bp as api_bp
+    from .routes.commissioner import bp as commissioner_bp
+    from .routes.draft import bp as draft_bp
     from .routes.public import bp as public_bp
+
     app.register_blueprint(public_bp)
+    app.register_blueprint(commissioner_bp)
+    app.register_blueprint(draft_bp)
+    app.register_blueprint(api_bp)
 
     @app.cli.command("seed")
     def seed_command() -> None:

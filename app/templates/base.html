@@ -37,7 +37,10 @@
           <a class="nav-link" href="#">Players</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="#">Draft</a>
+          <a class="nav-link" href="{{ url_for('draft.draft_room') }}">Draft</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="{{ url_for('commissioner.commissioner_panel') }}">Commissioner</a>
         </li>
       </ul>
     </div>

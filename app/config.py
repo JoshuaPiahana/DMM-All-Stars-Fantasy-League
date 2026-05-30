@@ -14,11 +14,13 @@ class Config:
         os.environ.get("DATABASE_URL", "postgresql://localhost/dmm_fantasy")
     )
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    INGEST_SECRET = os.environ.get("INGEST_SECRET", "")
 
 
 class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite:///:memory:"
+    INGEST_SECRET = "test-ingest-secret"
 
 
 class ProductionConfig(Config):

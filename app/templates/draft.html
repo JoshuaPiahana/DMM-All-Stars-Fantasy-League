@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Draft Room — DMM All Stars 3 Fantasy{% endblock %}
+
+{% block content %}
+<h1 class="text-gold mb-4">Draft Room</h1>
+
+{% if not league %}
+  <div class="rs-card">
+    <div class="rs-card-body text-center py-4">
+      <p class="text-rs-muted">No league found.</p>
+      <a href="/create" class="btn btn-rs">Create League</a>
+    </div>
+  </div>
+
+{% elif not state or not state.started_at %}
+  <div class="rs-card mb-3">
+    <div class="rs-card-header">Draft Not Started</div>
+    <div class="rs-card-body">
+      <p class="text-rs-muted">Commissioner must start the draft.</p>
+      <button id="start-btn" class="btn btn-rs">Start Draft</button>
+      <div id="start-error" class="text-rs-muted small mt-2" style="display:none"></div>
+    </div>
+  </div>
+
+{% else %}
+  <div class="row">
+    <div class="col-md-7">
+      <div class="rs-card mb-3">
+        <div class="rs-card-header">
+          Available Players
+          <span class="float-end text-rs-muted small">{{ available|length }} remaining</span>
+        </div>
+        <div class="rs-card-body p-0">
+          {% if available %}
+          {% for player in available %}
+          <div class="d-flex justify-content-between align-items-center px-3 py-2"
+               style="border-bottom:1px solid rgba(122,92,0,.2)">
+            <span>{{ player.display_name }}</span>
+            <button class="btn btn-rs btn-rs-sm"
+                    onclick="makePick({{ player.id }})">Draft</button>
+          </div>
+          {% endfor %}
+          {% else %}
+          <p class="text-rs-muted text-center py-3 mb-0">All players drafted!</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="col-md-5">
+      <div class="rs-card">
+        <div class="rs-card-header">
+          Pick History
+          {% if not state.completed_at %}
+          <span class="float-end text-rs-muted small">
+            Pick {{ state.current_pick + 1 }} / {{ total_picks }}
+          </span>
+          {% else %}
+          <span class="float-end text-gold small">Complete!</span>
+          {% endif %}
+        </div>
+        <div class="rs-card-body p-0" id="pick-history">
+          {% for entry in entries|reverse %}
+          <div class="d-flex align-items-center px-3 py-1"
+               style="border-bottom:1px solid rgba(122,92,0,.2)">
+            <span class="text-rs-muted me-2" style="min-width:2rem">#{{ entry.pick_number }}</span>
+            <span class="text-rs-muted me-2">{{ entry.manager.name }}</span>
+            <span class="text-rs-muted me-1">→</span>
+            <span class="text-gold">{{ entry.player.display_name }}</span>
+          </div>
+          {% else %}
+          <p class="text-rs-muted text-center py-3 mb-0">No picks yet.</p>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="pick-error" class="text-rs-muted small mt-2" style="display:none"></div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/draft.js') }}"></script>
+{% endblock %}

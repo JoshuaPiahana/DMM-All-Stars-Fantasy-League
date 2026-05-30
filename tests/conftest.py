@@ -2,6 +2,7 @@ import pytest
 
 from app import create_app
 from app.extensions import db as _db
+from app.seed import seed_if_empty
 
 
 @pytest.fixture
@@ -18,3 +19,10 @@ def app():
 @pytest.fixture
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture
+def seeded_app(app):
+    """App with all 30 players and 6 teams seeded."""
+    seed_if_empty()
+    return app

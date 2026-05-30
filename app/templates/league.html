@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}League {{ league.code }} — DMM All Stars 3 Fantasy{% endblock %}
+
+{% block content %}
+<div class="row">
+  <div class="col-md-6">
+    <h1 class="text-gold mb-1">Fantasy League</h1>
+    <p class="text-rs-muted mb-4">Code: <strong class="text-gold">{{ league.code }}</strong></p>
+
+    <div class="rs-card mb-4">
+      <div class="rs-card-header">Managers</div>
+      <div class="rs-card-body p-0">
+        {% for manager in managers %}
+        <div class="d-flex justify-content-between align-items-center px-3 py-2"
+             style="border-bottom:1px solid rgba(122,92,0,.25)">
+          <span>
+            {{ manager.name }}
+            {% if manager.pick_position %}
+            <span class="ms-2 small text-rs-muted">Pick #{{ manager.pick_position }}</span>
+            {% endif %}
+          </span>
+          <button class="btn btn-rs btn-rs-sm"
+                  onclick="claimToken({{ manager.id }}, '{{ manager.name }}')">
+            Claim Token
+          </button>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div id="token-result" style="display:none"></div>
+
+    <a href="/draft" class="btn btn-rs">Draft Room</a>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function claimToken(managerId, managerName) {
+  const resp = await fetch(`/league/{{ league.code }}/manager/${managerId}/token`);
+  const data = await resp.json();
+  if (!resp.ok) return;
+  localStorage.setItem('manager_token', data.token);
+  localStorage.setItem('manager_name', managerName);
+  const el = document.getElementById('token-result');
+  el.innerHTML = `
+    <div class="rs-card">
+      <div class="rs-card-header">Token claimed for ${managerName}</div>
+      <div class="rs-card-body">
+        <p class="text-rs-muted small mb-1">Saved to your browser. Keep this private.</p>
+        <code class="text-rs-muted">${data.token}</code>
+      </div>
+    </div>`;
+  el.style.display = 'block';
+}
+</script>
+{% endblock %}

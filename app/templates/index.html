@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}DMM All Stars 3 — Fantasy League{% endblock %}
 
 {% block content %}
@@ -7,17 +6,33 @@
   <div class="col-md-8 text-center py-5">
     <h1 class="text-gold mb-3">DMM All Stars 3 Fantasy League</h1>
     <p class="text-rs-muted mb-4">
-      Event starts 6 June 2026 &nbsp;&middot;&nbsp; Fantasy draft 31 May 2026
+      Event: 6–15 June 2026 &nbsp;&middot;&nbsp; Draft: 31 May 2026
     </p>
+
+    {% if league %}
+    <div class="rs-card mb-3">
+      <div class="rs-card-header">League Active</div>
+      <div class="rs-card-body">
+        <p class="text-gold mb-1">Code: <strong>{{ league.code }}</strong></p>
+        <div class="d-flex justify-content-center gap-2 mt-3">
+          <a href="/league/{{ league.code }}" class="btn btn-rs">Managers</a>
+          <a href="/draft" class="btn btn-rs">Draft Room</a>
+          <a href="/commissioner" class="btn btn-rs">Commissioner</a>
+        </div>
+      </div>
+    </div>
+    {% else %}
     <div class="rs-card">
       <div class="rs-card-header">Status</div>
       <div class="rs-card-body text-center py-4">
-        <p class="text-gold mb-1">League setup in progress</p>
-        <p class="text-rs-muted small mb-0">
-          Pages and features will appear here as development progresses.
+        <p class="text-gold mb-1">No league created yet</p>
+        <p class="text-rs-muted small mb-3">
+          Commissioner: create the league to get started.
         </p>
+        <a href="/create" class="btn btn-rs">Create League</a>
       </div>
     </div>
+    {% endif %}
   </div>
 </div>
 {% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Create League — DMM All Stars 3 Fantasy{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <h1 class="text-gold mb-4">Create Fantasy League</h1>
+
+    <div class="rs-card" id="create-form-wrap">
+      <div class="rs-card-header">Manager Names</div>
+      <div class="rs-card-body">
+        <p class="text-rs-muted mb-3">Enter the names of all 6 managers.</p>
+        <form id="create-form">
+          {% for i in range(1, 7) %}
+          <div class="mb-3">
+            <label class="form-label text-rs-muted">Manager {{ i }}</label>
+            <input type="text" class="form-control manager-name"
+                   style="background:var(--rs-mid);border-color:var(--rs-border);color:var(--rs-text);"
+                   placeholder="Manager {{ i }}" required>
+          </div>
+          {% endfor %}
+          <button type="submit" class="btn btn-rs w-100 mt-2">Create League</button>
+        </form>
+      </div>
+    </div>
+
+    <div id="result" class="mt-4" style="display:none"></div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('create-form').addEventListener('submit', async function (e) {
+  e.preventDefault();
+  const names = [...document.querySelectorAll('.manager-name')].map(i => i.value.trim());
+  const resp = await fetch('/create', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({managers: names}),
+  });
+  const data = await resp.json();
+  if (!resp.ok) {
+    document.getElementById('result').innerHTML =
+      `<div class="alert alert-rs-error">${data.error}</div>`;
+    document.getElementById('result').style.display = 'block';
+    return;
+  }
+  localStorage.setItem('commissioner_token', data.commissioner_token);
+  localStorage.setItem('league_code', data.league_code);
+
+  let rows = data.managers.map(m =>
+    `<tr><td>${m.name}</td><td class="text-rs-muted" style="font-family:monospace;font-size:.8rem">${m.token}</td></tr>`
+  ).join('');
+
+  document.getElementById('result').innerHTML = `
+    <div class="rs-card">
+      <div class="rs-card-header">League Created!</div>
+      <div class="rs-card-body">
+        <p>League Code: <strong class="text-gold">${data.league_code}</strong></p>
+        <p class="text-rs-muted small">Commissioner token stored in your browser.</p>
+        <p>Share the manager page:
+          <a href="/league/${data.league_code}" class="text-gold">/league/${data.league_code}</a>
+        </p>
+        <table class="rs-table mt-3"><thead><tr><th>Manager</th><th>Token</th></tr></thead>
+          <tbody>${rows}</tbody></table>
+        <a href="/draft" class="btn btn-rs mt-3">Go to Draft Room</a>
+      </div>
+    </div>`;
+  document.getElementById('result').style.display = 'block';
+  document.getElementById('create-form-wrap').style.display = 'none';
+});
+</script>
+{% endblock %}
