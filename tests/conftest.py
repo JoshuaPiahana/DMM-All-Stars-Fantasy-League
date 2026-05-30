@@ -3,12 +3,14 @@ from app import create_app
 from app.extensions import db as _db
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture
 def app():
-    app = create_app("testing")
-    with app.app_context():
+    """Fresh in-memory SQLite DB per test — no cross-test bleed."""
+    _app = create_app("testing")
+    with _app.app_context():
         _db.create_all()
-        yield app
+        yield _app
+        _db.session.remove()
         _db.drop_all()
 
 
