@@ -1,38 +1,127 @@
 {% extends "base.html" %}
-{% block title %}DMM All Stars 3 — Fantasy League{% endblock %}
+{% block title %}Dashboard — DMM All Stars 3 Fantasy{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-  <div class="col-md-8 text-center py-5">
-    <h1 class="text-gold mb-3">DMM All Stars 3 Fantasy League</h1>
-    <p class="text-rs-muted mb-4">
-      Event: 6–15 June 2026 &nbsp;&middot;&nbsp; Draft: 31 May 2026
-    </p>
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="text-gold mb-0">Dashboard</h1>
+  {% if today_day %}
+  <span class="text-rs-muted">Event Day {{ today_day }}</span>
+  {% elif not league %}
+  <a href="/create" class="btn btn-rs btn-rs-sm">Create League</a>
+  {% endif %}
+</div>
 
-    {% if league %}
+{% if not league %}
+<div class="rs-card">
+  <div class="rs-card-body text-center py-5">
+    <p class="text-gold mb-1">No league created yet</p>
+    <p class="text-rs-muted small mb-3">Commissioner: set up the league before the draft.</p>
+    <a href="/create" class="btn btn-rs">Create League</a>
+  </div>
+</div>
+
+{% else %}
+
+<div class="row g-4">
+
+  {# ── Standings ── #}
+  <div class="col-md-4">
+    <div class="rs-card h-100">
+      <div class="rs-card-header">Standings</div>
+      {% if standings %}
+      <table class="rs-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Manager</th><th>W</th><th>L</th><th>T</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in standings %}
+          <tr>
+            <td class="{% if loop.index0 == 0 %}rank-1{% elif loop.index0 == 1 %}rank-2{% elif loop.index0 == 2 %}rank-3{% endif %}">
+              {{ loop.index }}
+            </td>
+            <td>{{ row.manager.name }}</td>
+            <td class="text-rs-green">{{ row.wins }}</td>
+            <td class="text-rs-red">{{ row.losses }}</td>
+            <td class="text-rs-muted">{{ row.ties }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="rs-card-body text-center py-4">
+        <p class="text-rs-muted mb-0">Standings appear once the event starts.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  {# ── Today's Matchups ── #}
+  <div class="col-md-8">
+    {% if today_day and today_matchups %}
     <div class="rs-card mb-3">
-      <div class="rs-card-header">League Active</div>
+      <div class="rs-card-header">Day {{ today_day }} Matchups</div>
       <div class="rs-card-body">
-        <p class="text-gold mb-1">Code: <strong>{{ league.code }}</strong></p>
-        <div class="d-flex justify-content-center gap-2 mt-3">
-          <a href="/league/{{ league.code }}" class="btn btn-rs">Managers</a>
-          <a href="/draft" class="btn btn-rs">Draft Room</a>
-          <a href="/commissioner" class="btn btn-rs">Commissioner</a>
+        {% for mu in today_matchups %}
+        <div class="mb-3 {% if not loop.last %}pb-3{% endif %}"
+             style="{% if not loop.last %}border-bottom:1px solid var(--rs-border){% endif %}">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-gold fw-bold">{{ mu.manager_a.name }}</span>
+            <span class="text-rs-muted small">
+              {{ mu.result.wins_a }}–{{ mu.result.wins_b }}
+              {% if mu.result.matchup_winner == 'a' %}<span class="text-rs-green ms-1">WIN</span>
+              {% elif mu.result.matchup_winner == 'b' %}<span class="text-rs-red ms-1">LOSS</span>
+              {% endif %}
+            </span>
+            <span class="text-gold fw-bold">{{ mu.manager_b.name }}</span>
+          </div>
+          <div class="d-flex flex-wrap gap-1">
+            {% for cat in category_order %}
+            {% set cr = mu.result.category_results.get(cat, {}) %}
+            <span class="player-tag small
+              {% if cr.get('winner') == 'a' %}text-rs-green
+              {% elif cr.get('winner') == 'b' %}text-rs-red
+              {% else %}text-rs-muted{% endif %}">
+              {{ category_labels[cat] }}
+            </span>
+            {% endfor %}
+          </div>
         </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% elif today_day %}
+    <div class="rs-card mb-3">
+      <div class="rs-card-header">Day {{ today_day }} Matchups</div>
+      <div class="rs-card-body text-center py-3">
+        <p class="text-rs-muted mb-0">Draft positions not yet assigned.</p>
       </div>
     </div>
     {% else %}
-    <div class="rs-card">
-      <div class="rs-card-header">Status</div>
-      <div class="rs-card-body text-center py-4">
-        <p class="text-gold mb-1">No league created yet</p>
-        <p class="text-rs-muted small mb-3">
-          Commissioner: create the league to get started.
+    <div class="rs-card mb-3">
+      <div class="rs-card-header">Matchups</div>
+      <div class="rs-card-body text-center py-3">
+        <p class="text-rs-muted mb-1">Event starts 6 June 2026 at 11:00 UTC.</p>
+        <p class="text-rs-muted small mb-0">
+          {% for d in range(1, 10) %}
+          <a href="/matchup/{{ d }}" class="text-rs-muted me-2">Day {{ d }}</a>
+          {% endfor %}
         </p>
-        <a href="/create" class="btn btn-rs">Create League</a>
       </div>
     </div>
     {% endif %}
+
+    <div class="rs-card">
+      <div class="rs-card-header">Quick Links</div>
+      <div class="rs-card-body">
+        <a href="/draft" class="btn btn-rs me-2 mb-2">Draft Room</a>
+        <a href="/leaderboard" class="btn btn-rs me-2 mb-2">Leaderboard</a>
+        <a href="/commissioner" class="btn btn-rs mb-2">Commissioner</a>
+      </div>
+    </div>
   </div>
+
 </div>
+{% endif %}
 {% endblock %}

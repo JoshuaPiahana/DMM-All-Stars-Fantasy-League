@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}{{ player.display_name }} — DMM All Stars 3 Fantasy{% endblock %}
+
+{% block head %}
+<script src="https://cdn.plot.ly/plotly-2.27.0.min.js" defer></script>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="text-gold mb-0">{{ player.display_name }}</h1>
+    {% if roster_entry %}
+    <span class="text-rs-muted small">
+      Drafted by
+      <a href="/roster/{{ roster_entry.manager.token }}" class="text-rs-muted">
+        {{ roster_entry.manager.name }}
+      </a>
+      — pick #{{ roster_entry.pick_number }}
+    </span>
+    {% else %}
+    <span class="text-rs-muted small">Undrafted</span>
+    {% endif %}
+    {% if player.account_name %}
+    <div class="text-rs-muted small">Account: {{ player.account_name }}</div>
+    {% endif %}
+  </div>
+  <a href="/leaderboard" class="text-rs-muted small">← Leaderboard</a>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-5">
+    <div class="rs-card">
+      <div class="rs-card-header">Fantasy Category Scores</div>
+      <div class="rs-card-body p-0">
+        <table class="rs-table">
+          <tbody>
+            {% for cat in category_order %}
+            <tr>
+              <td class="text-rs-muted">{{ category_labels[cat] }}</td>
+              <td class="text-end text-gold">{{ scores.get(cat, 0) | fmt_num }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="rs-card mt-3">
+      <div class="rs-card-header">Snapshot Info</div>
+      <div class="rs-card-body">
+        <p class="text-rs-muted mb-0 small">
+          {{ snapshot_count }} snapshot{{ 's' if snapshot_count != 1 }} recorded.
+          {% if snapshot_count == 0 %}
+          Data will appear once the event starts.
+          {% endif %}
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-7">
+    {% if snapshot_count > 0 %}
+    <div class="rs-card">
+      <div class="rs-card-header">Combat XP Over Time</div>
+      <div class="rs-card-body p-1">
+        <div id="chart" style="height:300px"></div>
+      </div>
+    </div>
+    {% else %}
+    <div class="rs-card">
+      <div class="rs-card-body text-center py-5">
+        <p class="text-rs-muted">No snapshot data yet.</p>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if snapshot_count > 0 %}
+<script>
+(function () {
+  const raw = {{ chart_data | safe }};
+  Plotly.newPlot('chart', [{
+    x: raw.timestamps,
+    y: raw.combat_xp,
+    type: 'scatter',
+    mode: 'lines+markers',
+    name: 'Combat XP',
+    line: {color: '#ffd700', width: 2},
+    marker: {color: '#ffd700', size: 5},
+  }], {
+    paper_bgcolor: '#231200',
+    plot_bgcolor: '#1a0f00',
+    font: {color: '#e8d5a0'},
+    xaxis: {gridcolor: '#3b1f00', title: ''},
+    yaxis: {gridcolor: '#3b1f00', title: 'XP'},
+    margin: {t: 10, b: 40, l: 60, r: 10},
+    showlegend: false,
+  }, {responsive: true, displayModeBar: false});
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -29,6 +29,15 @@ def create_app(config_name: str | None = None) -> Flask:
     app.register_blueprint(draft_bp)
     app.register_blueprint(api_bp)
 
+    @app.template_filter("fmt_num")
+    def fmt_num(n: int | float) -> str:
+        n = int(n)
+        if n >= 1_000_000:
+            return f"{n / 1_000_000:.1f}M"
+        if n >= 1_000:
+            return f"{n / 1_000:.0f}K"
+        return str(n)
+
     @app.cli.command("seed")
     def seed_command() -> None:
         """Seed initial player and team data (idempotent)."""

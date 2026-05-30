@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ manager.name }}'s Roster — DMM All Stars 3 Fantasy{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="text-gold mb-0">{{ manager.name }}'s Roster</h1>
+    {% if manager.pick_position %}
+    <span class="text-rs-muted small">Pick Position #{{ manager.pick_position }}</span>
+    {% endif %}
+  </div>
+  <a href="/" class="text-rs-muted small">← Dashboard</a>
+</div>
+
+{% if not players %}
+<div class="rs-card">
+  <div class="rs-card-body text-center py-4">
+    <p class="text-rs-muted">No players drafted yet.</p>
+    <a href="/draft" class="btn btn-rs">Draft Room</a>
+  </div>
+</div>
+{% else %}
+<div class="rs-card mb-4">
+  <div class="rs-card-header">Category Scores</div>
+  <div class="rs-card-body p-0">
+    <table class="rs-table">
+      <thead>
+        <tr>
+          <th>Player</th>
+          {% for cat in category_order %}
+          <th class="text-end">{{ category_labels[cat] }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for pd in players %}
+        <tr>
+          <td>
+            <a href="/player/{{ pd.player.id }}" class="text-gold text-decoration-none">
+              {{ pd.player.display_name }}
+            </a>
+            <span class="text-rs-muted small ms-1">#{{ pd.pick_number }}</span>
+          </td>
+          {% for cat in category_order %}
+          <td class="text-end text-rs-muted">{{ pd.scores.get(cat, 0) | fmt_num }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="border-top: 2px solid var(--rs-border)">
+          <td class="text-gold fw-bold">Total</td>
+          {% for cat in category_order %}
+          <td class="text-end text-gold fw-bold">{{ roster_scores.get(cat, 0) | fmt_num }}</td>
+          {% endfor %}
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

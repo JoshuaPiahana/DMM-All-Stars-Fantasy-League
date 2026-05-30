@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block title %}Day {{ day }} Matchups — DMM All Stars 3 Fantasy{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center justify-content-between mb-4">
+  <div>
+    {% if prev_day %}<a href="/matchup/{{ prev_day }}" class="btn btn-rs btn-rs-sm me-2">← Day {{ prev_day }}</a>{% endif %}
+    <h1 class="text-gold d-inline-block mb-0">Day {{ day }} Matchups</h1>
+    {% if next_day %}<a href="/matchup/{{ next_day }}" class="btn btn-rs btn-rs-sm ms-2">Day {{ next_day }} →</a>{% endif %}
+  </div>
+  <a href="/" class="text-rs-muted small">← Dashboard</a>
+</div>
+
+{% if not matchups %}
+<div class="rs-card">
+  <div class="rs-card-body text-center py-4">
+    <p class="text-rs-muted">Draft positions not yet assigned — matchup data unavailable.</p>
+  </div>
+</div>
+{% endif %}
+
+{% for mu in matchups %}
+<div class="rs-card mb-4">
+  <div class="rs-card-header d-flex justify-content-between align-items-center">
+    <span>
+      <strong class="text-gold">{{ mu.manager_a.name if mu.manager_a else '—' }}</strong>
+      <span class="text-rs-muted mx-2">vs</span>
+      <strong class="text-gold">{{ mu.manager_b.name if mu.manager_b else '—' }}</strong>
+    </span>
+    <span class="text-rs-muted">
+      {% if mu.result.matchup_winner == 'a' %}
+        <span class="text-rs-green fw-bold">{{ mu.manager_a.name }} wins</span>
+        ({{ mu.result.wins_a }}–{{ mu.result.wins_b }})
+      {% elif mu.result.matchup_winner == 'b' %}
+        <span class="text-rs-green fw-bold">{{ mu.manager_b.name }} wins</span>
+        ({{ mu.result.wins_b }}–{{ mu.result.wins_a }})
+      {% else %}
+        No winner yet ({{ mu.result.wins_a }}–{{ mu.result.wins_b }})
+      {% endif %}
+    </span>
+  </div>
+  <div class="rs-card-body p-0">
+    <table class="rs-table">
+      <thead>
+        <tr>
+          <th>Category</th>
+          <th class="text-end">{{ mu.manager_a.name if mu.manager_a else '—' }}</th>
+          <th class="text-center" style="width:3rem"></th>
+          <th>{{ mu.manager_b.name if mu.manager_b else '—' }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for cat in category_order %}
+        {% set cr = mu.result.category_results.get(cat, {}) %}
+        {% set val_a = cr.get('a', 0) %}
+        {% set val_b = cr.get('b', 0) %}
+        {% set winner = cr.get('winner') %}
+        <tr>
+          <td class="text-rs-muted">{{ category_labels[cat] }}</td>
+          <td class="text-end {% if winner == 'a' %}cat-win{% elif winner == 'b' %}cat-loss{% else %}cat-tie{% endif %}">
+            {{ val_a | fmt_num }}
+          </td>
+          <td class="text-center text-rs-muted small">
+            {% if winner == 'a' %}◀{% elif winner == 'b' %}▶{% else %}={% endif %}
+          </td>
+          <td class="{% if winner == 'b' %}cat-win{% elif winner == 'a' %}cat-loss{% else %}cat-tie{% endif %}">
+            {{ val_b | fmt_num }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endfor %}
+
+<div class="text-center mt-3">
+  {% for d in range(1, 10) %}
+  <a href="/matchup/{{ d }}"
+     class="btn btn-rs btn-rs-sm me-1 mb-1 {% if d == day %}active{% endif %}">{{ d }}</a>
+  {% endfor %}
+</div>
+{% endblock %}

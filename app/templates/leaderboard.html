@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block title %}Leaderboard — DMM All Stars 3 Fantasy{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="text-gold mb-0">Player Leaderboard</h1>
+  <a href="/" class="text-rs-muted small">← Dashboard</a>
+</div>
+
+<div class="mb-3">
+  <span class="text-rs-muted small me-2">Sort by:</span>
+  {% for cat in category_order %}
+  <a href="/leaderboard?by={{ cat }}"
+     class="btn btn-rs btn-rs-sm me-1 mb-1 {% if cat == sort_by %}text-gold{% else %}text-rs-muted{% endif %}">
+    {{ category_labels[cat] }}
+  </a>
+  {% endfor %}
+</div>
+
+<div class="rs-card">
+  <div class="rs-card-body p-0">
+    <table class="rs-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Player</th>
+          <th>Manager</th>
+          {% for cat in category_order %}
+          <th class="text-end {% if cat == sort_by %}text-gold{% endif %}">{{ category_labels[cat] }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for pd in players %}
+        <tr>
+          <td class="{% if loop.index0 == 0 %}rank-1{% elif loop.index0 == 1 %}rank-2{% elif loop.index0 == 2 %}rank-3{% endif %} text-rs-muted">
+            {{ loop.index }}
+          </td>
+          <td>
+            <a href="/player/{{ pd.player.id }}" class="text-gold text-decoration-none">
+              {{ pd.player.display_name }}
+            </a>
+          </td>
+          <td class="text-rs-muted">{{ pd.manager.name if pd.manager else '—' }}</td>
+          {% for cat in category_order %}
+          <td class="text-end {% if cat == sort_by %}text-gold{% else %}text-rs-muted{% endif %}">
+            {{ pd.scores.get(cat, 0) | fmt_num }}
+          </td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

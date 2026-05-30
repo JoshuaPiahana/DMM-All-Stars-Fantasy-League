@@ -56,11 +56,24 @@ _SCHEDULE: dict[int, list[tuple[int, int]]] = {
 }
 
 # All numeric fields that appear in a stat dict
-_ALL_STAT_FIELDS = (
+ALL_STAT_FIELDS: list[str] = (
     _COMBAT_SKILLS + _GATHERING_SKILLS + _PROCESSING_SKILLS
     + _RAID_FIELDS + list(_BOSS_WEIGHTS)
     + ["overall_xp", "agility_xp", "pvp_kills", "deaths_cumulative"]
 )
+
+# Display names for the 7 scoring categories (in matchup order)
+CATEGORY_LABELS: dict[str, str] = {
+    "combat_xp":     "Combat XP",
+    "pvp_kills":     "PvP Kills",
+    "bosses":        "Boss Points",
+    "raids":         "Raid Completions",
+    "gathering_xp":  "Gathering XP",
+    "processing_xp": "Processing XP",
+    "deaths":        "Deaths",
+}
+
+CATEGORY_ORDER: list[str] = list(CATEGORY_LABELS.keys())
 
 
 # ── Public API ────────────────────────────────────────────────────────────────
@@ -69,15 +82,15 @@ def compute_delta(current: dict, baseline: dict) -> dict:
     """Return current − baseline for every stat field, clamped to 0."""
     return {
         field: max(0, current.get(field, 0) - baseline.get(field, 0))
-        for field in _ALL_STAT_FIELDS
+        for field in ALL_STAT_FIELDS
     }
 
 
 def sum_roster(player_deltas: list[dict]) -> dict:
     """Sum per-player deltas across a full roster."""
-    totals: dict[str, int] = {field: 0 for field in _ALL_STAT_FIELDS}
+    totals: dict[str, int] = {field: 0 for field in ALL_STAT_FIELDS}
     for delta in player_deltas:
-        for field in _ALL_STAT_FIELDS:
+        for field in ALL_STAT_FIELDS:
             totals[field] += delta.get(field, 0)
     return totals
 

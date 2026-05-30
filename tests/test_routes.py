@@ -309,3 +309,55 @@ def test_internal_poll_baseline_type_stored(seeded_app):
 def test_draft_page_returns_200(seeded_app, league_data):
     resp = seeded_app.test_client().get("/draft")
     assert resp.status_code == 200
+
+
+# ── Phase 6 page smoke tests ──────────────────────────────────────────────────
+
+def test_matchup_page_valid_day(seeded_app, league_data):
+    for day in range(1, 10):
+        resp = seeded_app.test_client().get(f"/matchup/{day}")
+        assert resp.status_code == 200, f"day {day} returned {resp.status_code}"
+
+
+def test_matchup_page_invalid_day_404(seeded_app):
+    resp = seeded_app.test_client().get("/matchup/0")
+    assert resp.status_code == 404
+    resp = seeded_app.test_client().get("/matchup/10")
+    assert resp.status_code == 404
+
+
+def test_leaderboard_returns_200(seeded_app):
+    resp = seeded_app.test_client().get("/leaderboard")
+    assert resp.status_code == 200
+
+
+def test_leaderboard_sort_by_category(seeded_app):
+    from app.services.scoring import CATEGORY_ORDER
+    for cat in CATEGORY_ORDER:
+        resp = seeded_app.test_client().get(f"/leaderboard?by={cat}")
+        assert resp.status_code == 200
+
+
+def test_player_detail_valid(seeded_app):
+    player_id = db.session.query(Player).first().id
+    resp = seeded_app.test_client().get(f"/player/{player_id}")
+    assert resp.status_code == 200
+
+
+def test_player_detail_404(seeded_app):
+    resp = seeded_app.test_client().get("/player/99999")
+    assert resp.status_code == 404
+
+
+def test_roster_valid_token(seeded_app, league_data):
+    client = seeded_app.test_client()
+    _start_draft(client, league_data["commissioner_token"])
+    db.session.expire_all()
+    mgr = db.session.query(Manager).filter_by(pick_position=1).first()
+    resp = client.get(f"/roster/{mgr.token}")
+    assert resp.status_code == 200
+
+
+def test_roster_invalid_token_404(seeded_app):
+    resp = seeded_app.test_client().get("/roster/not-a-real-token")
+    assert resp.status_code == 404
